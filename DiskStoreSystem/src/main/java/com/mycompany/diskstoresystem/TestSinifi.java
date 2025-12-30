@@ -10,7 +10,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Scanner;
 
-public class GrpcDiskClient {
+public class TestSinifi {
 
     public static void main(String[] args) {
         // Kanal oluştur (Sunucu bağlantısı)

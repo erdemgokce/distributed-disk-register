@@ -2,7 +2,7 @@ package com.mycompany.diskstoresystem;
 
 import java.util.Scanner;
 
-public class DiskStoreSystem {
+public class NodeMain {
 
     public static void main(String[] args) {
         System.out.println("=== Disk Store System ===");
@@ -17,10 +17,10 @@ public class DiskStoreSystem {
             if (secim.equals("1")) {
                 System.out.println("Server başlatılıyor...");
                 // Artık hata fırlatsa bile try-catch içinde olduğu için kızmayacak
-                GrpcDiskServer.main(args); 
+                FamilyServiceImpl.main(args);
             } else if (secim.equals("2")) {
                 System.out.println("Client başlatılıyor...");
-                GrpcDiskClient.main(args);
+                TestSinifi.main(args);
             } else {
                 System.out.println("Geçersiz seçim! Program kapanıyor.");
             }

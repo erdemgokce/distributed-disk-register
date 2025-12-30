@@ -17,7 +17,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class GrpcDiskServer {
+public class FamilyServiceImpl {
 
     // --- AYARLAR ---
     private static final String DATA_DIR = "messages";
