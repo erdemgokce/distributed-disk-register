@@ -5,7 +5,7 @@ option java_multiple_files = true;
 option java_package = "com.mycompany.diskstoresystem.proto";
 option java_outer_classname = "DiskStoreProto";
 
-package diskstore;
+package family;
 
 service DiskService {
   rpc Store (StoreRequest) returns (StoreResponse);

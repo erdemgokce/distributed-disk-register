@@ -4,11 +4,11 @@
 package com.mycompany.diskstoresystem.proto;
 
 /**
- * Protobuf type {@code diskstore.StoreRequest}
+ * Protobuf type {@code family.StoreRequest}
  */
 public final class StoreRequest extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:diskstore.StoreRequest)
+    // @@protoc_insertion_point(message_implements:family.StoreRequest)
     StoreRequestOrBuilder {
 private static final long serialVersionUID = 0L;
   // Use StoreRequest.newBuilder() to construct.
@@ -29,13 +29,13 @@ private static final long serialVersionUID = 0L;
 
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_diskstore_StoreRequest_descriptor;
+    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_diskstore_StoreRequest_fieldAccessorTable
+    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             com.mycompany.diskstoresystem.proto.StoreRequest.class, com.mycompany.diskstoresystem.proto.StoreRequest.Builder.class);
   }
@@ -285,21 +285,21 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code diskstore.StoreRequest}
+   * Protobuf type {@code family.StoreRequest}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:diskstore.StoreRequest)
+      // @@protoc_insertion_point(builder_implements:family.StoreRequest)
       com.mycompany.diskstoresystem.proto.StoreRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_diskstore_StoreRequest_descriptor;
+      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_diskstore_StoreRequest_fieldAccessorTable
+      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.mycompany.diskstoresystem.proto.StoreRequest.class, com.mycompany.diskstoresystem.proto.StoreRequest.Builder.class);
     }
@@ -326,7 +326,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_diskstore_StoreRequest_descriptor;
+      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_descriptor;
     }
 
     @java.lang.Override
@@ -624,10 +624,10 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    // @@protoc_insertion_point(builder_scope:diskstore.StoreRequest)
+    // @@protoc_insertion_point(builder_scope:family.StoreRequest)
   }
 
-  // @@protoc_insertion_point(class_scope:diskstore.StoreRequest)
+  // @@protoc_insertion_point(class_scope:family.StoreRequest)
   private static final com.mycompany.diskstoresystem.proto.StoreRequest DEFAULT_INSTANCE;
   static {
     DEFAULT_INSTANCE = new com.mycompany.diskstoresystem.proto.StoreRequest();

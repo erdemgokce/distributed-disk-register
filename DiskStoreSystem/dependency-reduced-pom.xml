@@ -48,7 +48,7 @@
               <transformers>
                 <transformer />
                 <transformer>
-                  <mainClass>com.mycompany.diskstoresystem.GrpcDiskServer</mainClass>
+                  <mainClass>com.mycompany.diskstoresystem.FamilyServiceImpl</mainClass>
                 </transformer>
               </transformers>
             </configuration>

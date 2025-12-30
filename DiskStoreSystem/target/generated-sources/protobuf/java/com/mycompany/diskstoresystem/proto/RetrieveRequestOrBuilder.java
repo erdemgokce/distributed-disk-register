@@ -4,7 +4,7 @@
 package com.mycompany.diskstoresystem.proto;
 
 public interface RetrieveRequestOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:diskstore.RetrieveRequest)
+    // @@protoc_insertion_point(interface_extends:family.RetrieveRequest)
     com.google.protobuf.MessageOrBuilder {
 
   /**

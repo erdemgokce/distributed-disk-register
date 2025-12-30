@@ -15,25 +15,25 @@ public final class DiskStoreProto {
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_diskstore_StoreRequest_descriptor;
+    internal_static_family_StoreRequest_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_diskstore_StoreRequest_fieldAccessorTable;
+      internal_static_family_StoreRequest_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_diskstore_StoreResponse_descriptor;
+    internal_static_family_StoreResponse_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_diskstore_StoreResponse_fieldAccessorTable;
+      internal_static_family_StoreResponse_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_diskstore_RetrieveRequest_descriptor;
+    internal_static_family_RetrieveRequest_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_diskstore_RetrieveRequest_fieldAccessorTable;
+      internal_static_family_RetrieveRequest_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_diskstore_RetrieveResponse_descriptor;
+    internal_static_family_RetrieveResponse_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_diskstore_RetrieveResponse_fieldAccessorTable;
+      internal_static_family_RetrieveResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -43,45 +43,45 @@ public final class DiskStoreProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022proto/schema.proto\022\tdiskstore\")\n\014Store" +
-      "Request\022\013\n\003key\030\001 \001(\t\022\014\n\004data\030\002 \001(\t\"1\n\rSt" +
-      "oreResponse\022\017\n\007success\030\001 \001(\010\022\017\n\007message\030" +
-      "\002 \001(\t\"\036\n\017RetrieveRequest\022\013\n\003key\030\001 \001(\t\"/\n" +
-      "\020RetrieveResponse\022\014\n\004data\030\001 \001(\t\022\r\n\005found" +
-      "\030\002 \001(\0102\216\001\n\013DiskService\022:\n\005Store\022\027.diskst" +
-      "ore.StoreRequest\032\030.diskstore.StoreRespon" +
-      "se\022C\n\010Retrieve\022\032.diskstore.RetrieveReque" +
-      "st\032\033.diskstore.RetrieveResponseB7\n#com.m" +
-      "ycompany.diskstoresystem.protoB\016DiskStor" +
-      "eProtoP\001b\006proto3"
+      "\n\022proto/schema.proto\022\006family\")\n\014StoreReq" +
+      "uest\022\013\n\003key\030\001 \001(\t\022\014\n\004data\030\002 \001(\t\"1\n\rStore" +
+      "Response\022\017\n\007success\030\001 \001(\010\022\017\n\007message\030\002 \001" +
+      "(\t\"\036\n\017RetrieveRequest\022\013\n\003key\030\001 \001(\t\"/\n\020Re" +
+      "trieveResponse\022\014\n\004data\030\001 \001(\t\022\r\n\005found\030\002 " +
+      "\001(\0102\202\001\n\013DiskService\0224\n\005Store\022\024.family.St" +
+      "oreRequest\032\025.family.StoreResponse\022=\n\010Ret" +
+      "rieve\022\027.family.RetrieveRequest\032\030.family." +
+      "RetrieveResponseB7\n#com.mycompany.diskst" +
+      "oresystem.protoB\016DiskStoreProtoP\001b\006proto" +
+      "3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         });
-    internal_static_diskstore_StoreRequest_descriptor =
+    internal_static_family_StoreRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_diskstore_StoreRequest_fieldAccessorTable = new
+    internal_static_family_StoreRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_diskstore_StoreRequest_descriptor,
+        internal_static_family_StoreRequest_descriptor,
         new java.lang.String[] { "Key", "Data", });
-    internal_static_diskstore_StoreResponse_descriptor =
+    internal_static_family_StoreResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_diskstore_StoreResponse_fieldAccessorTable = new
+    internal_static_family_StoreResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_diskstore_StoreResponse_descriptor,
+        internal_static_family_StoreResponse_descriptor,
         new java.lang.String[] { "Success", "Message", });
-    internal_static_diskstore_RetrieveRequest_descriptor =
+    internal_static_family_RetrieveRequest_descriptor =
       getDescriptor().getMessageTypes().get(2);
-    internal_static_diskstore_RetrieveRequest_fieldAccessorTable = new
+    internal_static_family_RetrieveRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_diskstore_RetrieveRequest_descriptor,
+        internal_static_family_RetrieveRequest_descriptor,
         new java.lang.String[] { "Key", });
-    internal_static_diskstore_RetrieveResponse_descriptor =
+    internal_static_family_RetrieveResponse_descriptor =
       getDescriptor().getMessageTypes().get(3);
-    internal_static_diskstore_RetrieveResponse_fieldAccessorTable = new
+    internal_static_family_RetrieveResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_diskstore_RetrieveResponse_descriptor,
+        internal_static_family_RetrieveResponse_descriptor,
         new java.lang.String[] { "Data", "Found", });
   }
 

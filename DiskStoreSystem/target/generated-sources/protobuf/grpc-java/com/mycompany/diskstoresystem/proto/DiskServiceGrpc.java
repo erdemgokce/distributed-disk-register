@@ -12,7 +12,7 @@ public final class DiskServiceGrpc {
 
   private DiskServiceGrpc() {}
 
-  public static final java.lang.String SERVICE_NAME = "diskstore.DiskService";
+  public static final java.lang.String SERVICE_NAME = "family.DiskService";
 
   // Static method descriptors that strictly reflect the proto.
   private static volatile io.grpc.MethodDescriptor<com.mycompany.diskstoresystem.proto.StoreRequest,
