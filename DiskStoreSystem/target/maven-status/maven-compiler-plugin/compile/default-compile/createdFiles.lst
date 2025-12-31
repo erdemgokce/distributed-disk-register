@@ -40,7 +40,6 @@ com\mycompany\diskstoresystem\proto\ChatMessage.class
 com\mycompany\diskstoresystem\proto\ChatMessageOrBuilder.class
 com\mycompany\diskstoresystem\proto\DiskServiceGrpc$1.class
 com\mycompany\diskstoresystem\proto\JoinRequestOrBuilder.class
-com\mycompany\diskstoresystem\TestSinifi.class
 com\mycompany\diskstoresystem\proto\RetrieveResponse$Builder.class
 com\mycompany\diskstoresystem\proto\EmptyOrBuilder.class
 com\mycompany\diskstoresystem\proto\DiskServiceGrpc$DiskServiceBlockingStub.class

@@ -1,1 +1,0 @@
-Merhana dünya

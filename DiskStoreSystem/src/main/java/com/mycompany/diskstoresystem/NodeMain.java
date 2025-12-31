@@ -8,6 +8,7 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -22,21 +23,19 @@ public class NodeMain {
     public static void main(String[] args) {
         System.out.println("=== Distributed Disk Register System ===");
 
-        // 1. ADIM: 5555'ten başlayarak boş portu bulur ve ve gRPC Server'ı başlatır.
+        // 1. ADIM: Portu bul ve gRPC Sunucuyu başlat
         startServerOnAvailablePort();
 
-        // 2. ADIM: Rolünü belirler ve ona göre davranır
+        // 2. ADIM: Role göre TCP Gateway veya Join başlat
         if (isLeader) {
             System.out.println("[ROL] LIDER: TCP Port 6666 dinleniyor...");
-            // Lider ise dış dünyadan TCP mesajlarını bekleyen thread'i başlatır
             startTcpGateway();
         } else {
-            System.out.println("[ROL] UYE: Lider'e (5555) katilma istegi gonderiliyor...");
-            // Üye ise Lider'e gidip "Beni listene ekle" diyecek
+            System.out.println("[ROL] UYE: Lider'e katilma istegi gonderiliyor...");
             joinFamily();
         }
 
-        // 3. ADIM: Her 10 saniyede bir aile listesini ekrana basar.
+        // 3. ADIM: Durum raporlama
         startFamilyReportingThread();
     }
 
@@ -46,7 +45,6 @@ public class NodeMain {
 
         while (!started && port < 5600) {
             try {
-                // FamilyServiceImpl'i başlatırken hangi portta olduğumuzu ona söyleyelim
                 Server server = ServerBuilder.forPort(port)
                         .addService(new FamilyServiceImpl(port))
                         .build()
@@ -57,18 +55,16 @@ public class NodeMain {
                 started = true;
                 System.out.println("Node basariyla baslatildi. Port: " + MY_PORT);
 
-                // Sunucunun açık kalması için awaitTermination'ı bir thread içinde bekletiyoruz
                 Thread serverThread = new Thread(() -> {
                     try {
                         server.awaitTermination();
                     } catch (InterruptedException e) {
-                        System.err.println("Sunucu beklenmedik sekilde durdu.");
+                        System.err.println("Sunucu durdu.");
                     }
                 });
                 serverThread.start();
 
             } catch (IOException e) {
-                // Port doluysa (başka bir üye kapmışsa) bir sonrakini dene
                 port++;
             }
         }
@@ -78,63 +74,70 @@ public class NodeMain {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(TCP_GATEWAY_PORT)) {
                 while (true) {
-                    try (Socket socket = serverSocket.accept();
-                         Scanner in = new Scanner(socket.getInputStream())) {
+                    Socket socket = serverSocket.accept();
+                    new Thread(() -> {
+                        try (Scanner in = new Scanner(socket.getInputStream());
+                             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
-                        if (in.hasNextLine()) {
-                            String line = in.nextLine(); // Telnet'ten gelen mesajı okur
-                            System.out.println("TCP Gateway'den gelen komut: " + line);
+                            out.println("--- Distributed Disk Register Gateway'e Hosgeldiniz ---");
 
-                            // Okunan mesajı gRPC üzerinden tüm aile üyelerine gönderir
-                            FamilyServiceImpl.broadcastToAll(line, MY_PORT);
+                            while (in.hasNextLine()) {
+                                String line = in.nextLine();
+                                if (line.equalsIgnoreCase("EXIT")) break;
+
+                                String[] parts = line.split(" ", 3);
+                                String command = parts[0].toUpperCase();
+
+                                if (command.equals("SET") && parts.length == 3) {
+                                    FamilyServiceImpl.sendStoreToAll(parts[1], parts[2]);
+                                    out.println("OK - Kayit baslatildi.");
+                                }
+                                else if (command.equals("GET") && parts.length == 2) {
+                                    FamilyServiceImpl.sendRetrieveRequest(parts[1]);
+                                    out.println("OK - Okuma istegi alindi.");
+                                }
+                                else {
+                                    out.println("HATA: Gecersiz komut.");
+                                }
+                            }
+                        } catch (IOException e) {
+                            System.err.println("TCP Baglantisi koptu.");
                         }
-                    } catch (Exception e) {
-                        System.err.println("Bağlantı işlenirken hata: " + e.getMessage());
-                    }
+                    }).start();
                 }
             } catch (IOException e) {
-                System.err.println("TCP Gateway başlatılamadı: " + e.getMessage());
+                System.err.println("TCP Gateway hatasi: " + e.getMessage());
             }
         }).start();
     }
+
     private static void joinFamily() {
         try {
-            // Lider'in adresine (5555) bağlanır
             ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", START_PORT)
                     .usePlaintext()
                     .build();
 
-            // Lider'e Join isteği gönderir
             DiskServiceGrpc.DiskServiceBlockingStub stub = DiskServiceGrpc.newBlockingStub(channel);
-
-            JoinRequest req = JoinRequest.newBuilder()
-                    .setPort(MY_PORT) // Kendi portumuzu bildiriyoruz
-                    .build();
-
+            JoinRequest req = JoinRequest.newBuilder().setPort(MY_PORT).build();
             JoinResponse res = stub.join(req);
 
             if (res.getSuccess()) {
-                System.out.println("[JOIN] Lider onay verdi: " + res.getMessage());
+                System.out.println("[JOIN] Lider onayi: " + res.getMessage());
             }
-
-            channel.shutdown();
-
+            // Not: Kanalı kapatmıyoruz çünkü ileride liderden mesaj almak için aktif kalmalı.
         } catch (Exception e) {
-            System.err.println("[JOIN] Lidere bağlanılamadı!");
+            System.err.println("[JOIN] Lidere baglanilamadi! Liderin ayakta oldugundan emin olun.");
         }
-    } {
-
-        // Bu mantığı FamilyServiceImpl içinde implement edeceğiz.
-        System.out.println("Lider'e Join isteği gönderiliyor. (Port: 5555)...");
     }
 
     private static void startFamilyReportingThread() {
         new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(10000); // 10 saniyede bir rapor ver
-                    System.out.println("\n--- Aile Durumu (Port: " + MY_PORT + ") ---");
-                    // NodeRegistry.printMembers(); // Üye listesini basacak
+                    Thread.sleep(15000);
+                    System.out.println("\n--- Sistem Durumu (Node: " + MY_PORT + ") ---");
+                    System.out.println("Rol: " + (isLeader ? "LIDER" : "UYE"));
+                    System.out.println("------------------------------------");
                 } catch (InterruptedException e) {
                     break;
                 }
