@@ -53,10 +53,21 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     // --- 3. RETRIEVE (Veri Okuma) ---
     @Override
     public void retrieve(RetrieveRequest request, StreamObserver<RetrieveResponse> responseObserver) {
-        RetrieveResponse response = RetrieveResponse.newBuilder()
-                .setData("Ornek Veri")
-                .setFound(true)
-                .build();
+        // Üye kendi diskine bakar
+        String data = readFromLocalDisk(request.getKey());
+
+        RetrieveResponse response;
+        if (data != null) {
+            response = RetrieveResponse.newBuilder()
+                    .setData(data)
+                    .setFound(true)
+                    .build();
+        } else {
+            response = RetrieveResponse.newBuilder()
+                    .setFound(false)
+                    .build();
+        }
+
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
@@ -90,39 +101,72 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
             }
         }
     }
-
+    private static final Map<Integer, Integer> memberMessageCounts = new ConcurrentHashMap<>();
     public static void sendStoreToAll(String key, String value) {
-        // Lider önce kendine yazar
-        saveToDisk(key, value);
+        saveToDisk(key, value); // Lider yazar
 
         int tolerance = getToleranceValue();
-        if (memberStubs.isEmpty()) {
+        List<Integer> ports = new ArrayList<>(memberStubs.keySet());
+        int totalMembers = ports.size();
+
+        if (totalMembers == 0) {
             System.out.println("[LIDER] Yedeklenecek üye yok.");
             return;
         }
 
-        List<Integer> ports = new ArrayList<>(memberStubs.keySet());
-        int count = 0;
-        int totalMembers = ports.size();
+        int successfulBackups = 0;
+        int attempts = 0;
 
-        while (count < tolerance && count < totalMembers) {
+        // Hedef: Tolerance kadar başarılı kayıt!
+        // Ama toplam üye sayısından fazla deneme yapma (sonsuz döngü olmasın)
+        while (successfulBackups < tolerance && attempts < totalMembers) {
             int targetPort = ports.get(nextMemberIndex % totalMembers);
             nextMemberIndex++;
+            attempts++;
+
             try {
                 StoreRequest req = StoreRequest.newBuilder().setKey(key).setData(value).build();
-                memberStubs.get(targetPort).store(req);
-                System.out.println("-> Yedeklendi: Port " + targetPort);
-                count++;
+                StoreResponse res = memberStubs.get(targetPort).store(req);
+
+                if (res.getSuccess()) {
+                    successfulBackups++;
+                    memberMessageCounts.put(targetPort, memberMessageCounts.getOrDefault(targetPort, 0) + 1);
+                    System.out.println("-> [" + successfulBackups + "/" + tolerance + "] Başarıyla yedeklendi: Port " + targetPort);
+                }
             } catch (Exception e) {
-                System.err.println("-> Port " + targetPort + " hata verdi.");
+                System.err.println("-> Port " + targetPort + " denendi ama başarısız.");
             }
         }
     }
 
-    public static void sendRetrieveRequest(String key) {
-        System.out.println("[LIDER] Okuma isteği: " + key);
-    }
+    public static String sendRetrieveRequest(String key) {
+        System.out.println("[LIDER] Okuma istegi: " + key);
 
+        // 1. ADIM: Lider kendi diskine bakar
+        String localData = readFromLocalDisk(key);
+        if (localData != null) return "[LIDERDEN] " + localData;
+
+        // 2. ADIM: Kendi diskinde yoksa, uyeleri sirayla sorgular
+        for (Integer port : memberStubs.keySet()) {
+            try {
+                System.out.println("-> Uye " + port + " sorgulaniyor...");
+                RetrieveRequest req = RetrieveRequest.newBuilder().setKey(key).build();
+
+                // Bu cagri sirasinda eger uye crash olmusa Exception firlatir
+                RetrieveResponse res = memberStubs.get(port).retrieve(req);
+
+                if (res.getFound()) {
+                    System.out.println("-> Mesaj Uye " + port + " uzerinde bulundu!");
+                    return "[UYE " + port + "]: " + res.getData();
+                }
+            } catch (Exception e) {
+                // 3. ADIM: Eger 3. uye crash olmussa buraya duser ve dongu 4. uyeye gecer
+                System.err.println("-> Uye " + port + " cevap vermiyor (Crash olmus olabilir), siradakine geciliyor.");
+            }
+        }
+
+        return "HATA: Mesaj hicbir yerde bulunamadi.";
+    }
     // --- YARDIMCI METOTLAR ---
 
     // DÜZELTME: İki tane saveToDiskStatic vardı, teke indirdik ve ismini saveToDisk yaptık
@@ -142,15 +186,52 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     }
 
     private static int getToleranceValue() {
+        File file = new File("tolerance.conf");
         try {
-            File file = new File("tolerance.conf");
             if (file.exists()) {
                 Scanner scanner = new Scanner(file);
-                if (scanner.hasNextInt()) return scanner.nextInt();
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine().trim();
+                    if (line.toUpperCase().startsWith("TOLERANCE=")) {
+                        String valuePart = line.split("=")[1].trim();
+                        return Integer.parseInt(valuePart);
+                    }
+                }
+                scanner.close();
             }
         } catch (Exception e) {
-            System.err.println("tolerance.conf okunamadı.");
+            System.err.println("[HATA] tolerance.conf okunurken hata: " + e.getMessage());
         }
-        return 1;
+        return 1; // Dosya okunamazsa veya format yanlışsa
+    }
+    // FamilyServiceImpl.java içine
+    public static void printMemberStats() {
+        if (memberMessageCounts.isEmpty()) {
+            System.out.println("  - Henüz üyelerde kayıtlı mesaj yok veya üye bağlı değil.");
+            return;
+        }
+        for (Map.Entry<Integer, Integer> entry : memberMessageCounts.entrySet()) {
+            System.out.println("  - Üye (Port: " + entry.getKey() + "): " + entry.getValue() + " mesaj");
+        }
+    }
+    private static String readFromLocalDisk(String key) {
+        try {
+            // Key'i temizle (dosya adıyla eşleşmesi için)
+            String cleanKey = key.trim().replaceAll("[\\p{Cntrl}]", "");
+            File file = new File("messages", cleanKey + ".msg");
+
+            if (file.exists()) {
+                StringBuilder content = new StringBuilder();
+                try (Scanner reader = new Scanner(file)) {
+                    while (reader.hasNextLine()) {
+                        content.append(reader.nextLine());
+                    }
+                }
+                return content.toString();
+            }
+        } catch (IOException e) {
+            System.err.println("[DISK] Okuma hatası: " + e.getMessage());
+        }
+        return null; // Dosya yoksa veya hata varsa null döner
     }
 }

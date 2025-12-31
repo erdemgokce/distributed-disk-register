@@ -7,6 +7,8 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -93,8 +95,9 @@ public class NodeMain {
                                     out.println("OK - Kayit baslatildi.");
                                 }
                                 else if (command.equals("GET") && parts.length == 2) {
-                                    FamilyServiceImpl.sendRetrieveRequest(parts[1]);
-                                    out.println("OK - Okuma istegi alindi.");
+                                    // Metot artik bize String donuyor, bunu istemciye yazdiralim
+                                    String result = FamilyServiceImpl.sendRetrieveRequest(parts[1]);
+                                    out.println(result);
                                 }
                                 else {
                                     out.println("HATA: Gecersiz komut.");
@@ -134,10 +137,20 @@ public class NodeMain {
         new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(15000);
-                    System.out.println("\n--- Sistem Durumu (Node: " + MY_PORT + ") ---");
-                    System.out.println("Rol: " + (isLeader ? "LIDER" : "UYE"));
-                    System.out.println("------------------------------------");
+                    Thread.sleep(20000); // 20 saniyede bir rapor ver
+                    if (isLeader) {
+                        System.out.println("\n========= SISTEM RAPORU (LIDER) =========");
+
+                        // Liderin kendi mesajlarını say (messages klasöründeki dosya sayısı)
+                        File folder = new File("messages");
+                        int localCount = folder.exists() ? folder.list().length : 0;
+                        System.out.println("Liderdeki Toplam Mesaj: " + localCount);
+
+                        // Üyelerdeki mesajları yazdır
+                        System.out.println("Üyelerin Mesaj Dağılımı:");
+                        FamilyServiceImpl.printMemberStats(); // Bunu aşağıda tanımlayacağız
+                        System.out.println("========================================\n");
+                    }
                 } catch (InterruptedException e) {
                     break;
                 }

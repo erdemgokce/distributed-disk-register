@@ -1,1 +1,0 @@
-Arkada�lar
