@@ -75,7 +75,6 @@ public class NodeMain {
     }
 
     private static void startTcpGateway() {
-        // Liderin TCP 6666 üzerinden komutları (SET/GET) dinlediği kısım
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(TCP_GATEWAY_PORT)) {
                 while (true) {
@@ -83,26 +82,29 @@ public class NodeMain {
                          Scanner in = new Scanner(socket.getInputStream())) {
 
                         if (in.hasNextLine()) {
-                            String line = in.nextLine();
+                            String line = in.nextLine(); // Telnet'ten gelen mesajı okur
                             System.out.println("TCP Gateway'den gelen komut: " + line);
-                            // TODO: Buradaki komut parse edilip FamilyServiceImpl üzerinden dağıtılacak
+
+                            // Okunan mesajı gRPC üzerinden tüm aile üyelerine gönderir
+                            FamilyServiceImpl.broadcastToAll(line, MY_PORT);
                         }
+                    } catch (Exception e) {
+                        System.err.println("Bağlantı işlenirken hata: " + e.getMessage());
                     }
                 }
             } catch (IOException e) {
-                System.err.println("TCP Gateway baslatilamadi: " + e.getMessage());
+                System.err.println("TCP Gateway başlatılamadı: " + e.getMessage());
             }
         }).start();
     }
-
     private static void joinFamily() {
         try {
-            // Lider'in adresine (5555) bağlan
+            // Lider'in adresine (5555) bağlanır
             ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", START_PORT)
                     .usePlaintext()
                     .build();
 
-            // Lider'e Join isteği gönder
+            // Lider'e Join isteği gönderir
             DiskServiceGrpc.DiskServiceBlockingStub stub = DiskServiceGrpc.newBlockingStub(channel);
 
             JoinRequest req = JoinRequest.newBuilder()
@@ -115,16 +117,15 @@ public class NodeMain {
                 System.out.println("[JOIN] Lider onay verdi: " + res.getMessage());
             }
 
-            // Kanalı açık tutmamıza gerek yok, Lider bizi listesine ekledi bile
             channel.shutdown();
 
         } catch (Exception e) {
-            System.err.println("[JOIN] Lidere baglanilamadi! Belki de lider henüz ayakta degil.");
+            System.err.println("[JOIN] Lidere bağlanılamadı!");
         }
     } {
 
         // Bu mantığı FamilyServiceImpl içinde implement edeceğiz.
-        System.out.println("Lider'e Join istegi gonderiliyor (Port: 5555)...");
+        System.out.println("Lider'e Join isteği gönderiliyor. (Port: 5555)...");
     }
 
     private static void startFamilyReportingThread() {
