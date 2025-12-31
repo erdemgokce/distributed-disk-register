@@ -4,6 +4,10 @@
 package com.mycompany.diskstoresystem.proto;
 
 /**
+ * <pre>
+ * Store (SET) için
+ * </pre>
+ *
  * Protobuf type {@code family.StoreRequest}
  */
 public final class StoreRequest extends
@@ -29,13 +33,13 @@ private static final long serialVersionUID = 0L;
 
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_descriptor;
+    return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreRequest_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_fieldAccessorTable
+    return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             com.mycompany.diskstoresystem.proto.StoreRequest.class, com.mycompany.diskstoresystem.proto.StoreRequest.Builder.class);
   }
@@ -285,6 +289,10 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
+   * <pre>
+   * Store (SET) için
+   * </pre>
+   *
    * Protobuf type {@code family.StoreRequest}
    */
   public static final class Builder extends
@@ -293,13 +301,13 @@ private static final long serialVersionUID = 0L;
       com.mycompany.diskstoresystem.proto.StoreRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_descriptor;
+      return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_fieldAccessorTable
+      return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.mycompany.diskstoresystem.proto.StoreRequest.class, com.mycompany.diskstoresystem.proto.StoreRequest.Builder.class);
     }
@@ -326,7 +334,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreRequest_descriptor;
+      return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreRequest_descriptor;
     }
 
     @java.lang.Override

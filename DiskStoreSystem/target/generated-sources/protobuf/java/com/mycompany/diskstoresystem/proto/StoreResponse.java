@@ -28,13 +28,13 @@ private static final long serialVersionUID = 0L;
 
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreResponse_descriptor;
+    return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreResponse_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreResponse_fieldAccessorTable
+    return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreResponse_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             com.mycompany.diskstoresystem.proto.StoreResponse.class, com.mycompany.diskstoresystem.proto.StoreResponse.Builder.class);
   }
@@ -266,13 +266,13 @@ private static final long serialVersionUID = 0L;
       com.mycompany.diskstoresystem.proto.StoreResponseOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreResponse_descriptor;
+      return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreResponse_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreResponse_fieldAccessorTable
+      return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.mycompany.diskstoresystem.proto.StoreResponse.class, com.mycompany.diskstoresystem.proto.StoreResponse.Builder.class);
     }
@@ -299,7 +299,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.mycompany.diskstoresystem.proto.DiskStoreProto.internal_static_family_StoreResponse_descriptor;
+      return com.mycompany.diskstoresystem.proto.FamilyProto.internal_static_family_StoreResponse_descriptor;
     }
 
     @java.lang.Override

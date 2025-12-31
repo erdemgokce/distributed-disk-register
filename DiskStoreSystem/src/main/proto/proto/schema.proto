@@ -1,17 +1,37 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-// DİKKAT: Burası Java dosyalarının paket ismiyle uyumlu olmalı
 option java_package = "com.mycompany.diskstoresystem.proto";
-option java_outer_classname = "DiskStoreProto";
+option java_outer_classname = "FamilyProto";
 
 package family;
 
+// --- SERVİS TANIMLARI ---
 service DiskService {
+  // Aileye katılma (Join)
+  rpc Join (JoinRequest) returns (JoinResponse);
+
+  // Dağıtık veri saklama (SET/GET)
   rpc Store (StoreRequest) returns (StoreResponse);
   rpc Retrieve (RetrieveRequest) returns (RetrieveResponse);
+
+  // Hocanın istediği Chat/Broadcast mesajlaşması
+  rpc Broadcast (ChatMessage) returns (Empty);
 }
 
+// --- MESAJ YAPILARI ---
+
+// Join için: Yeni gelen üye kendi portunu bildirir
+message JoinRequest {
+  int32 port = 1;
+}
+
+message JoinResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Store (SET) için
 message StoreRequest {
   string key = 1;
   string data = 2;
@@ -22,6 +42,7 @@ message StoreResponse {
   string message = 2;
 }
 
+// Retrieve (GET) için
 message RetrieveRequest {
   string key = 1;
 }
@@ -30,3 +51,13 @@ message RetrieveResponse {
   string data = 1;
   bool found = 2;
 }
+
+message ChatMessage {
+  string text = 1;
+  string fromHost = 2;
+  int32 fromPort = 3;
+  int64 timestamp = 4;
+}
+
+// Boş dönüşler için
+message Empty {}
