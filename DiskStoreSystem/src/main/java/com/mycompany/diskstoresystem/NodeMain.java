@@ -14,6 +14,10 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import com.mycompany.diskstoresystem.proto.Empty;
 
 public class NodeMain {
 
@@ -21,6 +25,7 @@ public class NodeMain {
     private static final int START_PORT = 5555;
     private static final int TCP_GATEWAY_PORT = 6666;
     private static boolean isLeader = false;
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public static void main(String[] args) {
         System.out.println("=== Distributed Disk Register System ===");
@@ -39,6 +44,9 @@ public class NodeMain {
 
         // 3. ADIM: Durum raporlama
         startFamilyReportingThread();
+
+        // 4. ADIM: Heartbeat baslat
+        startHeartbeat();
     }
 
     private static void startServerOnAvailablePort() {
@@ -85,7 +93,8 @@ public class NodeMain {
 
                             while (in.hasNextLine()) {
                                 String line = in.nextLine();
-                                if (line.equalsIgnoreCase("EXIT")) break;
+                                if (line.equalsIgnoreCase("EXIT"))
+                                    break;
 
                                 String[] parts = line.split(" ", 3);
                                 String command = parts[0].toUpperCase();
@@ -93,13 +102,11 @@ public class NodeMain {
                                 if (command.equals("SET") && parts.length == 3) {
                                     FamilyServiceImpl.sendStoreToAll(parts[1], parts[2]);
                                     out.println("OK - Kayit baslatildi.");
-                                }
-                                else if (command.equals("GET") && parts.length == 2) {
+                                } else if (command.equals("GET") && parts.length == 2) {
                                     // Metot artik bize String donuyor, bunu istemciye yazdiralim
                                     String result = FamilyServiceImpl.sendRetrieveRequest(parts[1]);
                                     out.println(result);
-                                }
-                                else {
+                                } else {
                                     out.println("HATA: Gecersiz komut.");
                                 }
                             }
@@ -121,13 +128,18 @@ public class NodeMain {
                     .build();
 
             DiskServiceGrpc.DiskServiceBlockingStub stub = DiskServiceGrpc.newBlockingStub(channel);
+            // Lideri kaydet
+            NodeRegistry.addNode(START_PORT, stub, channel);
+
             JoinRequest req = JoinRequest.newBuilder().setPort(MY_PORT).build();
+
             JoinResponse res = stub.join(req);
 
             if (res.getSuccess()) {
                 System.out.println("[JOIN] Lider onayi: " + res.getMessage());
             }
-            // Not: Kanalı kapatmıyoruz çünkü ileride liderden mesaj almak için aktif kalmalı.
+            // Not: Kanalı kapatmıyoruz çünkü ileride liderden mesaj almak için aktif
+            // kalmalı.
         } catch (Exception e) {
             System.err.println("[JOIN] Lidere baglanilamadi! Liderin ayakta oldugundan emin olun.");
         }
@@ -156,5 +168,42 @@ public class NodeMain {
                 }
             }
         }).start();
+    }
+
+    private static void startHeartbeat() {
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                // Iterate through known members and call the Ping RPC.
+                for (Integer port : NodeRegistry.getMembers().keySet()) {
+                    try {
+                        DiskServiceGrpc.DiskServiceBlockingStub stub = NodeRegistry.getMembers().get(port);
+                        stub.ping(Empty.newBuilder().build());
+                    } catch (Exception e) {
+                        System.err.println("Member [port: " + port + "] is unreachable.");
+                        NodeRegistry.removeNode("localhost", port);
+                    }
+                }
+
+                // Election Check: Call nodeRegistry.isLowestPort(myPort).
+                if (!isLeader && NodeRegistry.isLowestPort(MY_PORT)) {
+                    promoteToLeader();
+                }
+
+            } catch (Exception e) {
+                System.err.println("[HEARTBEAT] Error: " + e.getMessage());
+            }
+        }, 0, 3, TimeUnit.SECONDS);
+    }
+
+    private static void promoteToLeader() {
+        try {
+            isLeader = true;
+            System.out.println("[LEADER PROMOTION] Determining leadership...");
+            // Wait a bit to ensure port 6666 is clear or just retry
+            startTcpGateway();
+            System.out.println("[LEADER PROMOTION] I am the new LEADER!");
+        } catch (Exception e) {
+            System.err.println("[LEADER PROMOTION] Failed to start TCP Gateway: " + e.getMessage());
+        }
     }
 }
