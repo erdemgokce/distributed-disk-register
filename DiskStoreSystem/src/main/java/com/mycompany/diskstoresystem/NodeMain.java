@@ -8,15 +8,17 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
 import com.mycompany.diskstoresystem.proto.Empty;
 
 public class NodeMain {
@@ -26,6 +28,7 @@ public class NodeMain {
     private static final int TCP_GATEWAY_PORT = 6666;
     private static boolean isLeader = false;
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private static final Logger logger = Logger.getLogger(com.mycompany.diskstoresystem.NodeMain.class.getName());
 
     public static void main(String[] args) {
         System.out.println("=== Distributed Disk Register System ===");
@@ -86,6 +89,7 @@ public class NodeMain {
                 while (true) {
                     Socket socket = serverSocket.accept();
                     new Thread(() -> {
+                        String clientIp = socket.getInetAddress().getHostAddress();
                         try (Scanner in = new Scanner(socket.getInputStream());
                              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
@@ -93,6 +97,8 @@ public class NodeMain {
 
                             while (in.hasNextLine()) {
                                 String line = in.nextLine();
+                                // Gelen komutu log dosyasına kaydetme
+                                logTcpRequest(clientIp, line);
                                 if (line.equalsIgnoreCase("EXIT"))
                                     break;
 
@@ -119,6 +125,26 @@ public class NodeMain {
                 System.err.println("TCP Gateway hatasi: " + e.getMessage());
             }
         }).start();
+    }
+
+    private static void logTcpRequest(String clientIp, String command) {
+        File logFile = new File("tcp_requests.log");
+
+        // Çoklu thread çakışmasını önlemek için synchronized kullanıyoruz
+        synchronized (com.mycompany.diskstoresystem.NodeMain.class) {
+            // Appened modunda(ture dediğimiz için appened modu oldu) FileWriter kullanıyoruz
+            try (FileWriter fw = new FileWriter(logFile, true);
+                 BufferedWriter bw = new BufferedWriter(fw);
+                 PrintWriter out = new PrintWriter(bw)) {
+
+                String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                // Dosyaya yazdırıyoruz
+                out.println("[" + timeStamp + "] [" + clientIp + "] " + command);
+
+            } catch (IOException e) {
+                System.err.println("[LOG HATA] Dosyaya yazılamadı: " + e.getMessage());
+            }
+        }
     }
 
     private static void joinFamily() {
