@@ -17,6 +17,9 @@ service DiskService {
 
   // Hocanın istediği Chat/Broadcast mesajlaşması
   rpc Broadcast (ChatMessage) returns (Empty);
+
+  // Sağlık kontrolü (Health Check)
+  rpc Ping (Empty) returns (Empty);
 }
 
 // --- MESAJ YAPILARI ---
