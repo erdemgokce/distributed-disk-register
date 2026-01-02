@@ -24,8 +24,10 @@ com\mycompany\diskstoresystem\proto\RetrieveResponseOrBuilder.class
 com\mycompany\diskstoresystem\proto\StoreRequest$1.class
 com\mycompany\diskstoresystem\FamilyServiceImpl.class
 com\mycompany\diskstoresystem\proto\JoinRequest.class
+com\mycompany\diskstoresystem\HaToKuSeTest.class
 com\mycompany\diskstoresystem\proto\DiskServiceGrpc$2.class
 com\mycompany\diskstoresystem\proto\DiskServiceGrpc$DiskServiceFileDescriptorSupplier.class
+com\mycompany\diskstoresystem\NodeRegistry.class
 com\mycompany\diskstoresystem\proto\JoinRequest$1.class
 com\mycompany\diskstoresystem\proto\JoinResponseOrBuilder.class
 com\mycompany\diskstoresystem\proto\RetrieveRequest.class

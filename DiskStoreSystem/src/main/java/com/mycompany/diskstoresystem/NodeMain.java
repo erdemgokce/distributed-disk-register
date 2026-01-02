@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import com.mycompany.diskstoresystem.proto.Empty;
 
+
 public class NodeMain {
 
     private static int MY_PORT;
@@ -148,27 +149,43 @@ public class NodeMain {
     }
 
     private static void joinFamily() {
-        try {
-            ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", START_PORT)
-                    .usePlaintext()
-                    .build();
+        new Thread(() -> {
+            while (!isLeader) { // Lider olmadığım sürece bir lidere bağlanmaya çalış
+                int leaderPort = START_PORT;
+                boolean connected = false;
 
-            DiskServiceGrpc.DiskServiceBlockingStub stub = DiskServiceGrpc.newBlockingStub(channel);
-            // Lideri kaydet
-            NodeRegistry.addNode(START_PORT, stub, channel);
+                // En küçük porttan başlayarak aktif lideri bul (Kendi portuna kadar)
+                for (int p = START_PORT; p < MY_PORT; p++) {
+                    if (isPortActive(p)) {
+                        leaderPort = p;
+                        connected = true;
+                        break;
+                    }
+                }
 
-            JoinRequest req = JoinRequest.newBuilder().setPort(MY_PORT).build();
+                if (connected) {
+                    try {
+                        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", leaderPort)
+                                .usePlaintext().build();
+                        DiskServiceGrpc.DiskServiceBlockingStub stub = DiskServiceGrpc.newBlockingStub(channel);
 
-            JoinResponse res = stub.join(req);
+                        // Yeni lidere kendini tanıtır
+                        JoinResponse res = stub.join(JoinRequest.newBuilder().setPort(MY_PORT).build());
+                        if (res.getSuccess()) {
+                            System.out.println("[JOIN] Yeni Lidere (Port " + leaderPort + ") baglandim.");
 
-            if (res.getSuccess()) {
-                System.out.println("[JOIN] Lider onayi: " + res.getMessage());
+                            // Lider düşene kadar burada bekle (Heartbeat)
+                            while (isPortActive(leaderPort) && !isLeader) {
+                                Thread.sleep(3000);
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[JOIN] Baglanti koptu, yeniden deneniyor...");
+                    }
+                }
+                try { Thread.sleep(2000); } catch (InterruptedException e) {}
             }
-            // Not: Kanalı kapatmıyoruz çünkü ileride liderden mesaj almak için aktif
-            // kalmalı.
-        } catch (Exception e) {
-            System.err.println("[JOIN] Lidere baglanilamadi! Liderin ayakta oldugundan emin olun.");
-        }
+        }).start();
     }
 
     private static void startFamilyReportingThread() {
@@ -195,41 +212,66 @@ public class NodeMain {
             }
         }).start();
     }
-
     private static void startHeartbeat() {
         scheduler.scheduleAtFixedRate(() -> {
             try {
-                // Iterate through known members and call the Ping RPC.
+                // 1. ÜYE TAKİBİ: Bildiğimiz üyeler hala ayakta mı?
                 for (Integer port : NodeRegistry.getMembers().keySet()) {
                     try {
                         DiskServiceGrpc.DiskServiceBlockingStub stub = NodeRegistry.getMembers().get(port);
                         stub.ping(Empty.newBuilder().build());
                     } catch (Exception e) {
-                        System.err.println("Member [port: " + port + "] is unreachable.");
+                        System.err.println("Üye [port: " + port + "] ulaşılamıyor. Kaldırılıyor...");
                         NodeRegistry.removeNode("localhost", port);
                     }
                 }
 
-                // Election Check: Call nodeRegistry.isLowestPort(myPort).
-                if (!isLeader && NodeRegistry.isLowestPort(MY_PORT)) {
-                    promoteToLeader();
+                // 2. LİDERLİK KONTROLÜ (Election Check)
+                if (!isLeader) {
+                    // Kural: Benden daha düşük (kıdemli) bir port aktif mi?
+                    boolean smallerPortExists = false;
+                    for (int p = START_PORT; p < MY_PORT; p++) {
+                        if (isPortActive(p)) {
+                            smallerPortExists = true;
+                            break; // Benden kıdemli biri var, liderlik için beklemeye devam.
+                        }
+                    }
+
+                    // Eğer benden küçük portlu kimse yoksa, liderliği devralma vaktim gelmiştir.
+                    if (!smallerPortExists) {
+                        promoteToLeader();
+                    }
                 }
 
             } catch (Exception e) {
-                System.err.println("[HEARTBEAT] Error: " + e.getMessage());
+                System.err.println("[HEARTBEAT] Hata: " + e.getMessage());
             }
-        }, 0, 3, TimeUnit.SECONDS);
+        }, 0, 3, TimeUnit.SECONDS); // 3 saniyede bir kontrol eder
     }
 
     private static void promoteToLeader() {
+        if (isLeader) return; // Zaten lidersem tekrar başlatma
+
         try {
+            System.out.println("[LİDER ELEMESİ] En kıdemli benim, liderlik devralınıyor...");
             isLeader = true;
-            System.out.println("[LEADER PROMOTION] Determining leadership...");
-            // Wait a bit to ensure port 6666 is clear or just retry
+
+            // TCP Gateway'i başlatmadan önce çok kısa bekle (Portun tam serbest kalması için)
+            Thread.sleep(500);
             startTcpGateway();
-            System.out.println("[LEADER PROMOTION] I am the new LEADER!");
+
+            System.out.println("[LİDER ARANIYOR] Yeni LIDER: " + MY_PORT);
         } catch (Exception e) {
-            System.err.println("[LEADER PROMOTION] Failed to start TCP Gateway: " + e.getMessage());
+            isLeader = false; // Hata alırsak liderliği geri bırak ki bir sonraki döngüde tekrar denesin
+            System.err.println("[LİDER ARANIYOR] Hata: " + e.getMessage());
+        }
+    }
+
+    private static boolean isPortActive(int port) {
+        try (java.net.Socket s = new java.net.Socket("localhost", port)) {
+            return true;
+        } catch (java.io.IOException e) {
+            return false;
         }
     }
 }

@@ -142,6 +142,37 @@ public final class DiskServiceGrpc {
     return getBroadcastMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<com.mycompany.diskstoresystem.proto.Empty,
+      com.mycompany.diskstoresystem.proto.Empty> getPingMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "Ping",
+      requestType = com.mycompany.diskstoresystem.proto.Empty.class,
+      responseType = com.mycompany.diskstoresystem.proto.Empty.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.mycompany.diskstoresystem.proto.Empty,
+      com.mycompany.diskstoresystem.proto.Empty> getPingMethod() {
+    io.grpc.MethodDescriptor<com.mycompany.diskstoresystem.proto.Empty, com.mycompany.diskstoresystem.proto.Empty> getPingMethod;
+    if ((getPingMethod = DiskServiceGrpc.getPingMethod) == null) {
+      synchronized (DiskServiceGrpc.class) {
+        if ((getPingMethod = DiskServiceGrpc.getPingMethod) == null) {
+          DiskServiceGrpc.getPingMethod = getPingMethod =
+              io.grpc.MethodDescriptor.<com.mycompany.diskstoresystem.proto.Empty, com.mycompany.diskstoresystem.proto.Empty>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "Ping"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.mycompany.diskstoresystem.proto.Empty.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.mycompany.diskstoresystem.proto.Empty.getDefaultInstance()))
+              .setSchemaDescriptor(new DiskServiceMethodDescriptorSupplier("Ping"))
+              .build();
+        }
+      }
+    }
+    return getPingMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -229,6 +260,16 @@ public final class DiskServiceGrpc {
         io.grpc.stub.StreamObserver<com.mycompany.diskstoresystem.proto.Empty> responseObserver) {
       io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getBroadcastMethod(), responseObserver);
     }
+
+    /**
+     * <pre>
+     * Sağlık kontrolü (Health Check)
+     * </pre>
+     */
+    default void ping(com.mycompany.diskstoresystem.proto.Empty request,
+        io.grpc.stub.StreamObserver<com.mycompany.diskstoresystem.proto.Empty> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getPingMethod(), responseObserver);
+    }
   }
 
   /**
@@ -304,6 +345,17 @@ public final class DiskServiceGrpc {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
           getChannel().newCall(getBroadcastMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     * <pre>
+     * Sağlık kontrolü (Health Check)
+     * </pre>
+     */
+    public void ping(com.mycompany.diskstoresystem.proto.Empty request,
+        io.grpc.stub.StreamObserver<com.mycompany.diskstoresystem.proto.Empty> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getPingMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -360,6 +412,16 @@ public final class DiskServiceGrpc {
     public com.mycompany.diskstoresystem.proto.Empty broadcast(com.mycompany.diskstoresystem.proto.ChatMessage request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getBroadcastMethod(), getCallOptions(), request);
+    }
+
+    /**
+     * <pre>
+     * Sağlık kontrolü (Health Check)
+     * </pre>
+     */
+    public com.mycompany.diskstoresystem.proto.Empty ping(com.mycompany.diskstoresystem.proto.Empty request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getPingMethod(), getCallOptions(), request);
     }
   }
 
@@ -422,12 +484,24 @@ public final class DiskServiceGrpc {
       return io.grpc.stub.ClientCalls.futureUnaryCall(
           getChannel().newCall(getBroadcastMethod(), getCallOptions()), request);
     }
+
+    /**
+     * <pre>
+     * Sağlık kontrolü (Health Check)
+     * </pre>
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.mycompany.diskstoresystem.proto.Empty> ping(
+        com.mycompany.diskstoresystem.proto.Empty request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getPingMethod(), getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_JOIN = 0;
   private static final int METHODID_STORE = 1;
   private static final int METHODID_RETRIEVE = 2;
   private static final int METHODID_BROADCAST = 3;
+  private static final int METHODID_PING = 4;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -460,6 +534,10 @@ public final class DiskServiceGrpc {
           break;
         case METHODID_BROADCAST:
           serviceImpl.broadcast((com.mycompany.diskstoresystem.proto.ChatMessage) request,
+              (io.grpc.stub.StreamObserver<com.mycompany.diskstoresystem.proto.Empty>) responseObserver);
+          break;
+        case METHODID_PING:
+          serviceImpl.ping((com.mycompany.diskstoresystem.proto.Empty) request,
               (io.grpc.stub.StreamObserver<com.mycompany.diskstoresystem.proto.Empty>) responseObserver);
           break;
         default:
@@ -508,6 +586,13 @@ public final class DiskServiceGrpc {
               com.mycompany.diskstoresystem.proto.ChatMessage,
               com.mycompany.diskstoresystem.proto.Empty>(
                 service, METHODID_BROADCAST)))
+        .addMethod(
+          getPingMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.mycompany.diskstoresystem.proto.Empty,
+              com.mycompany.diskstoresystem.proto.Empty>(
+                service, METHODID_PING)))
         .build();
   }
 
@@ -560,6 +645,7 @@ public final class DiskServiceGrpc {
               .addMethod(getStoreMethod())
               .addMethod(getRetrieveMethod())
               .addMethod(getBroadcastMethod())
+              .addMethod(getPingMethod())
               .build();
         }
       }

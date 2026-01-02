@@ -72,14 +72,15 @@ public final class FamilyProto {
       "rieveResponse\022\014\n\004data\030\001 \001(\t\022\r\n\005found\030\002 \001" +
       "(\010\"R\n\013ChatMessage\022\014\n\004text\030\001 \001(\t\022\020\n\010fromH" +
       "ost\030\002 \001(\t\022\020\n\010fromPort\030\003 \001(\005\022\021\n\ttimestamp" +
-      "\030\004 \001(\003\"\007\n\005Empty2\346\001\n\013DiskService\0221\n\004Join\022" +
+      "\030\004 \001(\003\"\007\n\005Empty2\214\002\n\013DiskService\0221\n\004Join\022" +
       "\023.family.JoinRequest\032\024.family.JoinRespon" +
       "se\0224\n\005Store\022\024.family.StoreRequest\032\025.fami" +
       "ly.StoreResponse\022=\n\010Retrieve\022\027.family.Re" +
       "trieveRequest\032\030.family.RetrieveResponse\022" +
       "/\n\tBroadcast\022\023.family.ChatMessage\032\r.fami" +
-      "ly.EmptyB4\n#com.mycompany.diskstoresyste" +
-      "m.protoB\013FamilyProtoP\001b\006proto3"
+      "ly.Empty\022$\n\004Ping\022\r.family.Empty\032\r.family" +
+      ".EmptyB4\n#com.mycompany.diskstoresystem." +
+      "protoB\013FamilyProtoP\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
