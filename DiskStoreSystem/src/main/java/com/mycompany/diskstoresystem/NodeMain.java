@@ -51,6 +51,43 @@ public class NodeMain {
 
         // 4. ADIM: Heartbeat baslat
         startHeartbeat();
+        // Konsoldan (Klavyeden) komut girmeyi sağlayan döngü
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("\n>>> KONSOL MODU AKTİF! Komut girebilirsin (Örn: SET k1 v1 veya GET k1)");
+
+        while (true) {
+            try {
+                if (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    String[] parts = line.trim().split("\\s+");
+
+                    if (parts.length == 0) continue;
+
+                    String command = parts[0].toUpperCase();
+
+                    if (command.equals("SET") && parts.length >= 3) {
+                        // SET komutunu işle (Value boşluk içeriyorsa birleştir)
+                        String key = parts[1];
+                        String value = line.substring(line.indexOf(parts[2]));
+                        FamilyServiceImpl.sendStoreToAll(key, value);
+                        System.out.println("[KONSOL] Kayıt işlemi tetiklendi.");
+
+                    } else if (command.equals("GET") && parts.length == 2) {
+                        // GET komutunu işle
+                        String result = FamilyServiceImpl.sendRetrieveRequest(parts[1]);
+                        System.out.println("[KONSOL SONUÇ]: " + result);
+
+                    } else if (command.equalsIgnoreCase("EXIT")) {
+                        System.out.println("Çıkılıyor...");
+                        System.exit(0);
+                    } else {
+                        System.out.println("HATA: Eksik veya yanlış komut. (SET key value / GET key)");
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Komut işlenirken hata: " + e.getMessage());
+            }
+        }
     }
 
     private static void startServerOnAvailablePort() {
