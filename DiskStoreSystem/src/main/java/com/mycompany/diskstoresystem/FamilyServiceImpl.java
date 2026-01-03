@@ -188,19 +188,63 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
 
     // DÜZELTME: İki tane saveToDiskStatic vardı, teke indirdik ve ismini saveToDisk
     // yaptık
-    private static void saveToDisk(String key, String data) {
-        try {
-            File folder = new File("messages");
-            if (!folder.exists())
-                folder.mkdirs();
+    // Yapılandırma: "BUFFERED", "UNBUFFERED_SYNC"
+    private static final String DISK_MODE = "UNBUFFERED_SYNC";
 
-            File file = new File(folder, key + ".msg");
-            try (FileWriter writer = new FileWriter(file)) {
-                writer.write(data);
+    private static void saveToDisk(String key, String data) {
+        File folder = new File("messages");
+        if (!folder.exists())
+            folder.mkdirs();
+
+        File file = new File(folder, key + ".msg");
+
+        try {
+            System.out.println("[DISK] Yazma Modu: " + DISK_MODE);
+
+            switch (DISK_MODE) {
+                case "BUFFERED":
+                    writeBuffered(file, data);
+                    break;
+                case "UNBUFFERED_SYNC":
+                    writeUnbufferedSync(file, data);
+                    break;
+
+                default:
+                    writeBuffered(file, data);
             }
             System.out.println("[DISK] Yazma basarili: " + file.getName());
+
         } catch (IOException e) {
             System.err.println("[DISK] Hata: " + e.getMessage());
+        }
+    }
+
+    // 1. BUFFERED Modu: Standart Java I/O
+    private static void writeBuffered(File file, String data) throws IOException {
+        // BufferedWriter performans için veriyi bellekte tamponlar (Buffer).
+        // Ancak ani elektrik kesintisinde buffer'daki veri diske yazılmamış olabilir.
+        try (FileWriter writer = new FileWriter(file);
+                BufferedWriter bw = new BufferedWriter(writer)) {
+            bw.write(data);
+        }
+    }
+
+    // 2. UNBUFFERED_SYNC Modu: Güvenli Yazma (Crash Safety)
+    private static void writeUnbufferedSync(File file, String data) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(file);
+                java.nio.channels.FileChannel channel = fos.getChannel()) {
+
+            byte[] bytes = data.getBytes();
+            java.nio.ByteBuffer buffer = java.nio.ByteBuffer.wrap(bytes);
+
+            // Veriyi kanala yaz
+            channel.write(buffer);
+
+            // KRİTİK: force(true) işlemi 'fsync' sistem çağrısını tetikler.
+            // Bu sayede veri işletim sistemi önbelleğinde (OS Cache) kalmaz,
+            // doğrudan fiziksel diske yazılması garanti edilir.
+            // Sistem çökse bile veri kaybı olmaz.
+            channel.force(true);
         }
     }
 
