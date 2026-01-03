@@ -1,12 +1,4 @@
-package com.mycompany.diskstoresystem;
-
-import com.mycompany.diskstoresystem.proto.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+packagecase
 
 public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     private final int myPort;
@@ -188,7 +180,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
 
     // DÜZELTME: İki tane saveToDiskStatic vardı, teke indirdik ve ismini saveToDisk
     // yaptık
-    // Yapılandırma: "BUFFERED", "UNBUFFERED_SYNC"
+    // Yapılandırma: "BUFFERED", "UNBUFFERED_SYNC" , "NIO"
     private static final String DISK_MODE = "UNBUFFERED_SYNC";
 
     private static void saveToDisk(String key, String data) {
@@ -207,6 +199,16 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
                     break;
                 case "UNBUFFERED_SYNC":
                     writeUnbufferedSync(file, data);
+                    break;
+                case "NIO":
+                    try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
+                         FileChannel channel = raf.getChannel()) {
+                        byte[] dataBytes = data.getBytes();
+                        java.nio.MappedByteBuffer mappedBuffer = channel.map(
+                                FileChannel.MapMode.READ_WRITE, 0, dataBytes.length);
+                        mappedBuffer.put(dataBytes);
+                        System.out.println("[IO-MODE] NIO (Memory Mapped / Zero Copy Principle) ile yazıldı.");
+                    }
                     break;
 
                 default:
