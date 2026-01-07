@@ -13,6 +13,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -131,7 +132,7 @@ public class NodeMain {
                         try (Scanner in = new Scanner(socket.getInputStream());
                              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
-                            out.println("--- Distributed Disk Register Gateway'e Hosgeldiniz ---");
+                            out.println("--- Dağıtık Kayıt Sistemi'ne Hoşgeldiniz ---");
 
                             while (in.hasNextLine()) {
                                 String line = in.nextLine();
@@ -145,22 +146,21 @@ public class NodeMain {
 
                                 if (command.equals("SET") && parts.length == 3) {
                                     FamilyServiceImpl.sendStoreToAll(parts[1], parts[2]);
-                                    out.println("OK - Kayit baslatildi.");
+                                    out.println("OK - Kayıt başlatıldı.");
                                 } else if (command.equals("GET") && parts.length == 2) {
-                                    // Metot artik bize String donuyor, bunu istemciye yazdiralim
                                     String result = FamilyServiceImpl.sendRetrieveRequest(parts[1]);
                                     out.println(result);
                                 } else {
-                                    out.println("HATA: Gecersiz komut.");
+                                    out.println("HATA: Geçersiz komut.");
                                 }
                             }
                         } catch (IOException e) {
-                            System.err.println("TCP Baglantisi koptu.");
+                            System.err.println("TCP Bağlantısı koptu.");
                         }
                     }).start();
                 }
             } catch (IOException e) {
-                System.err.println("TCP Gateway hatasi: " + e.getMessage());
+                System.err.println("TCP dağıtım hatası: " + e.getMessage());
             }
         }).start();
     }
@@ -209,7 +209,7 @@ public class NodeMain {
                         // Yeni lidere kendini tanıtır
                         JoinResponse res = stub.join(JoinRequest.newBuilder().setPort(MY_PORT).build());
                         if (res.getSuccess()) {
-                            System.out.println("[JOIN] Yeni Lidere (Port " + leaderPort + ") baglandim.");
+                            System.out.println("[JOIN] Yeni Lidere (Port " + leaderPort + ") bağlandım.");
 
                             // Lider düşene kadar burada bekle (Heartbeat)
                             while (isPortActive(leaderPort) && !isLeader) {
@@ -217,7 +217,7 @@ public class NodeMain {
                             }
                         }
                     } catch (Exception e) {
-                        System.err.println("[JOIN] Baglanti koptu, yeniden deneniyor...");
+                        System.err.println("[JOIN] Bağlantı koptu, yeniden deneniyor...");
                     }
                 }
                 try { Thread.sleep(2000); } catch (InterruptedException e) {}
@@ -235,7 +235,7 @@ public class NodeMain {
 
                         // Liderin kendi mesajlarını say (messages klasöründeki dosya sayısı)
                         File folder = new File("messages");
-                        int localCount = folder.exists() ? folder.list().length : 0;
+                        int localCount = folder.exists() ? Objects.requireNonNull(folder.list()).length : 0;
                         System.out.println("Liderdeki Toplam Mesaj: " + localCount);
 
                         // Üyelerdeki mesajları yazdır
@@ -265,7 +265,7 @@ public class NodeMain {
 
                 // 2. LİDERLİK KONTROLÜ (Election Check)
                 if (!isLeader) {
-                    // Kural: Benden daha düşük (kıdemli) bir port aktif mi?
+                    // Kural: Benden daha düşük bir port aktif mi?
                     boolean smallerPortExists = false;
                     for (int p = START_PORT; p < MY_PORT; p++) {
                         if (isPortActive(p)) {
@@ -274,7 +274,7 @@ public class NodeMain {
                         }
                     }
 
-                    // Eğer benden küçük portlu kimse yoksa, liderliği devralma vaktim gelmiştir.
+                    // Eğer küçük portlu kimse yoksa, liderliği devralır
                     if (!smallerPortExists) {
                         promoteToLeader();
                     }
@@ -293,7 +293,7 @@ public class NodeMain {
             System.out.println("[LİDER ELEMESİ] En kıdemli benim, liderlik devralınıyor...");
             isLeader = true;
 
-            // TCP Gateway'i başlatmadan önce çok kısa bekle (Portun tam serbest kalması için)
+            // TCP Gateway'i başlatmadan önce çok kısa bekler (Portun tam serbest kalması için)
             Thread.sleep(500);
             startTcpGateway();
 

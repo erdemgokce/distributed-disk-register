@@ -4,11 +4,14 @@ com\mycompany\diskstoresystem\proto\StoreResponse.class
 com\mycompany\diskstoresystem\proto\Empty$1.class
 com\mycompany\diskstoresystem\proto\DiskServiceGrpc$DiskServiceImplBase.class
 com\mycompany\diskstoresystem\proto\RetrieveRequest$1.class
+com\mycompany\diskstoresystem\HaToKuSeClient.class
 com\mycompany\diskstoresystem\proto\DiskServiceGrpc$AsyncService.class
 com\mycompany\diskstoresystem\proto\RetrieveRequest$Builder.class
 com\mycompany\diskstoresystem\proto\DiskServiceGrpc$DiskServiceStub.class
 com\mycompany\diskstoresystem\proto\Empty$Builder.class
+com\mycompany\diskstoresystem\HaToKuSeClient$Connection.class
 com\mycompany\diskstoresystem\proto\ChatMessage$1.class
+com\mycompany\diskstoresystem\HaToKuSeClient$Config.class
 com\mycompany\diskstoresystem\NodeMain.class
 com\mycompany\diskstoresystem\proto\JoinRequest$Builder.class
 com\mycompany\diskstoresystem\proto\JoinResponse$1.class

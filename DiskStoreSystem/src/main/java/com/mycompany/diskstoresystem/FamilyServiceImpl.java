@@ -1,11 +1,25 @@
-packagecase
+package com.mycompany.diskstoresystem;
+
+import com.mycompany.diskstoresystem.NodeRegistry;
+import com.mycompany.diskstoresystem.proto.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
+
+import java.io.*;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
+
+
 
 public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     private final int myPort;
     private static int nextMemberIndex = 0;
-    // private static final Map<Integer, DiskServiceGrpc.DiskServiceBlockingStub>
-    // memberStubs = new ConcurrentHashMap<>();
-    // Replaced by NodeRegistry
+    // NodeRegistry ile yer değiştirildi
 
     public FamilyServiceImpl(int port) {
         this.myPort = port;
@@ -22,7 +36,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
             // NodeRegistry üzerinden üyeyi ekle
             NodeRegistry.addNode(remotePort, DiskServiceGrpc.newBlockingStub(channel), channel);
 
-            System.out.println("[FAMILY] Yeni üye listeye eklendi: " + remotePort);
+            System.out.println("[AİLE] Yeni üye listeye eklendi: " + remotePort);
         }
         JoinResponse response = JoinResponse.newBuilder()
                 .setSuccess(true)
@@ -35,7 +49,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     // --- 2. STORE (Üye Veriyi Alınca Kaydeder) ---
     @Override
     public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
-        // DÜZELTME: Üye (Follower) mesajı aldığında diske yazmalı
+        // DÜZELTME: Üye mesajı aldığında diske yazmalı
         saveToDisk(request.getKey(), request.getData());
 
         StoreResponse response = StoreResponse.newBuilder()
@@ -46,7 +60,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
         responseObserver.onCompleted();
     }
 
-    // --- 3. RETRIEVE (Veri Okuma) ---
+    // --- 3. Veri Okuma ---
     @Override
     public void retrieve(RetrieveRequest request, StreamObserver<RetrieveResponse> responseObserver) {
         // Üye kendi diskine bakar
@@ -72,7 +86,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     @Override
     public void broadcast(ChatMessage request, StreamObserver<Empty> responseObserver) {
         System.out.println("\n--------------------------------------");
-        System.out.println(" 💬 YENİ MESAJ GELDİ!");
+        System.out.println("  YENİ MESAJ GELDİ!");
         System.out.println("  Kimden (Port): " + request.getFromPort());
         System.out.println("  Mesaj: " + request.getText());
         System.out.println("--------------------------------------");
@@ -108,7 +122,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     private static final Map<Integer, Integer> memberMessageCounts = new ConcurrentHashMap<>();
 
     public static void sendStoreToAll(String key, String value) {
-        saveToDisk(key, value); // Lider yazar
+        saveToDisk(key, value);
 
         int tolerance = getToleranceValue();
         List<Integer> ports = new ArrayList<>(NodeRegistry.getMembers().keySet());
@@ -116,7 +130,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
         int totalMembers = ports.size();
 
         if (totalMembers == 0) {
-            System.out.println("[LIDER] Yedeklenecek üye yok.");
+            System.out.println("[LiDER] Yedeklenecek üye yok.");
             return;
         }
 
@@ -124,7 +138,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
         int attempts = 0;
 
         // Hedef: Tolerance kadar başarılı kayıt!
-        // Ama toplam üye sayısından fazla deneme yapma (sonsuz döngü olmasın)
+        // Ama toplam üye sayısından fazla deneme yapma
         while (successfulBackups < tolerance && attempts < totalMembers) {
             int targetPort = ports.get(nextMemberIndex % totalMembers);
             nextMemberIndex++;
@@ -148,20 +162,20 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     }
 
     public static String sendRetrieveRequest(String key) {
-        System.out.println("[LIDER] Okuma istegi: " + key);
+        System.out.println("[LİDER] Okuma istegi: " + key);
 
         // 1. ADIM: Lider kendi diskine bakar
         String localData = readFromLocalDisk(key);
         if (localData != null)
-            return "[LIDERDEN] " + localData;
+            return "[LİDERDEN] " + localData;
 
-        // 2. ADIM: Kendi diskinde yoksa, uyeleri sirayla sorgular
+        // 2. ADIM: Kendi diskinde yoksa, uyeleri sırayla sorgular
         for (Integer port : NodeRegistry.getMembers().keySet()) {
             try {
                 System.out.println("-> Uye " + port + " sorgulaniyor...");
                 RetrieveRequest req = RetrieveRequest.newBuilder().setKey(key).build();
 
-                // Bu cagri sirasinda eger uye crash olmusa Exception firlatir
+                // Bu çağrı sırasında eger üye crash olmuşsa Exception fırlatır
                 RetrieveResponse res = NodeRegistry.getMembers().get(port).retrieve(req);
 
                 if (res.getFound()) {
@@ -169,19 +183,17 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
                     return "[UYE " + port + "]: " + res.getData();
                 }
             } catch (Exception e) {
-                // 3. ADIM: Eger 3. uye crash olmussa buraya duser ve dongu 4. uyeye gecer
-                System.err.println("-> Uye " + port + " cevap vermiyor (Crash olmus olabilir), siradakine geciliyor.");
+                // 3. ADIM: Eger 3. üye crash olmuşsa buraya düşer ve döngü 4. üyeye geçer
+                System.err.println("-> Uye " + port + " cevap vermiyor (Crash olmuş olabilir), sıradakine geçiliyor.");
             }
         }
 
-        return "HATA: Mesaj hicbir yerde bulunamadi.";
+        return "HATA: Mesaj hiçbir yerde bulunamadı.";
     }
     // --- YARDIMCI METOTLAR ---
-
-    // DÜZELTME: İki tane saveToDiskStatic vardı, teke indirdik ve ismini saveToDisk
-    // yaptık
+    // Diske Yazma Biçimleri
     // Yapılandırma: "BUFFERED", "UNBUFFERED_SYNC" , "NIO"
-    private static final String DISK_MODE = "UNBUFFERED_SYNC";
+    private static final String DISK_MODE = "NIO";
 
     private static void saveToDisk(String key, String data) {
         File folder = new File("messages");
@@ -191,7 +203,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
         File file = new File(folder, key + ".msg");
 
         try {
-            System.out.println("[DISK] Yazma Modu: " + DISK_MODE);
+            System.out.println("[DİSK] Yazma Modu: " + DISK_MODE);
 
             switch (DISK_MODE) {
                 case "BUFFERED":
@@ -214,10 +226,10 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
                 default:
                     writeBuffered(file, data);
             }
-            System.out.println("[DISK] Yazma basarili: " + file.getName());
+            System.out.println("[DİSK] Yazma başarılı: " + file.getName());
 
         } catch (IOException e) {
-            System.err.println("[DISK] Hata: " + e.getMessage());
+            System.err.println("[DİSK] Hata: " + e.getMessage());
         }
     }
 
@@ -226,7 +238,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
         // BufferedWriter performans için veriyi bellekte tamponlar (Buffer).
         // Ancak ani elektrik kesintisinde buffer'daki veri diske yazılmamış olabilir.
         try (FileWriter writer = new FileWriter(file);
-                BufferedWriter bw = new BufferedWriter(writer)) {
+             BufferedWriter bw = new BufferedWriter(writer)) {
             bw.write(data);
         }
     }
@@ -234,7 +246,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     // 2. UNBUFFERED_SYNC Modu: Güvenli Yazma (Crash Safety)
     private static void writeUnbufferedSync(File file, String data) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(file);
-                java.nio.channels.FileChannel channel = fos.getChannel()) {
+             java.nio.channels.FileChannel channel = fos.getChannel()) {
 
             byte[] bytes = data.getBytes();
             java.nio.ByteBuffer buffer = java.nio.ByteBuffer.wrap(bytes);
@@ -284,7 +296,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     private static String readFromLocalDisk(String key) {
         try {
             // Key'i temizle (dosya adıyla eşleşmesi için)
-            String cleanKey = key.trim().replaceAll("[\\p{Cntrl}]", "");
+            String cleanKey = key.trim().replaceAll("\\p{Cntrl}", "");
             File file = new File("messages", cleanKey + ".msg");
 
             if (file.exists()) {
@@ -297,7 +309,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
                 return content.toString();
             }
         } catch (IOException e) {
-            System.err.println("[DISK] Okuma hatası: " + e.getMessage());
+            System.err.println("[DİSK] Okuma hatası: " + e.getMessage());
         }
         return null; // Dosya yoksa veya hata varsa null döner
     }
