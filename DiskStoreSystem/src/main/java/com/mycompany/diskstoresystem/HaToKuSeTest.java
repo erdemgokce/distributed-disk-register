@@ -14,75 +14,109 @@ public class HaToKuSeTest {
     private static final int MESSAGE_COUNT = 1000;
 
     public static void main(String[] args) {
-        System.out.println("Dağıtık Sistem Test Aşaması");
+        System.out.println("Sistem Kontrol Ediliyor...");
+
+        // 1. ADIM: Lider Sunucu açık mı kontrolü
+        if (!isLeaderActive()) {
+            System.err.println("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("!!! HATA: LİDER SUNUCU BULUNAMADI (Port: " + SERVER_PORT + ") !!!");
+            System.err.println("!!! Lütfen önce Lider Sunucuyu başlatın.            !!!");
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            return;
+        }
+
+        System.out.println("Lider Sunucu Aktif! Testler Başlıyor...\n");
 
         try {
-            // Yük dağıtma kısmı.
-             testLoadBalancing();
+            // Veritabanını dolduruyoruz
+            testLoadBalancing();
 
-            // Crash kısmı.
+            // Crash senaryosu (Sadece senin istediğin mesajı getirir)
             testCrashScenario();
 
         } catch (Exception e) {
-            System.err.println("Test sırasında genel hata: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Test sırasında hata: " + e.getMessage());
+            e.printStackTrace(); // Hatayı detaylı görmek için ekledim
+        }
+    }
+
+    private static boolean isLeaderActive() {
+        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT)) {
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
     private static void testLoadBalancing() {
-        System.out.println("\n1000 Adet Mesaj Gönderiliyor...");
+        System.out.println("--- YÜK TESTİ (VERİ DOLDURMA) ---");
+        System.out.println("1000 Adet Mesaj Gönderiliyor...");
         int successCount = 0;
+
         for (int i = 1; i <= MESSAGE_COUNT; i++) {
             String response = sendCommand("SET " + i + " Test_Mesajı:" + i);
-            if (response != null && !response.isEmpty()) successCount++;
-            if (i % 200 == 0) System.out.println(i + ". mesaj gönderildi...");
+
+            if (response == null) {
+                System.err.println("\n!!! HATA: Yükleme sırasında Lider Sunucu koptu! !!!");
+                return;
+            }
+            successCount++;
+            if (i % 200 == 0) System.out.println(i + ". mesaj yüklendi...");
         }
-        System.out.println("Yük testi tamamlandı. Başarılı: " + successCount);
+        System.out.println("Yükleme tamamlandı. Toplam: " + successCount);
     }
 
     private static void testCrashScenario() {
-        System.out.println("\nCrash Testi Başlıyor...");
+        System.out.println("\n--- CRASH TESTİ (MANUEL KONTROL) ---");
         Scanner inputScanner = new Scanner(System.in);
-        String targetID = "500"; //ID = 500 olan mesajla işlem yapıyoruz.
 
-        String targetValue = "Test_Mesajı:500";  //ID = 500 olan mesajda "Test_Mesajı:500" yazması lazım.
-        //ID = 500 olan mesajı zaten yük testi sırasında veri tabanına kaydetmiştik.
+        // 1. Sadece ID alıyoruz
+        System.out.print("Görmek istediğin Mesaj ID'si (örn: 500): ");
+        if (inputScanner.hasNextLine()) {
+            String targetID = inputScanner.nextLine();
 
-        //Kullanıcı İşlemleri
-        System.out.println("Lider hariç bir node'u kapattığından emin ol!");
-        System.out.print("Crash testi yapmak için enter'a bas.");
-        inputScanner.nextLine(); //Enter tuşuna basana kadar kodu durdurur.
+            // 2. Bekleme
+            System.out.println("\n--- ŞİMDİ CRASH ZAMANI ---");
+            System.out.println("Lider hariç bir node'u kapatabilirsin.");
+            System.out.print("Node'u kapattıktan sonra mesajı çekmek için ENTER'a bas...");
+            inputScanner.nextLine();
 
-        //Veriyi okuma.
-        System.out.println("\nID = 500 olan mesaj okunmaya çalışılıyor.");
-        String getResponse = sendCommand("GET " + targetID);
+            // 3. Mesajı Çekme
+            System.out.println("\nID = " + targetID + " için Lider'e istek atılıyor...");
+            String getResponse = sendCommand("GET " + targetID);
 
-        System.out.println("   Sunucu Cevabı: " + getResponse);
+            if (getResponse == null) {
+                System.err.println("HATA: Lider Sunucuya ulaşılamıyor.");
+                return;
+            }
 
-        //Doğrulama kısmı.
-        if (getResponse != null && getResponse.contains(targetValue)) {
-            System.out.println("\nBAŞARILI: Tebrikler! Sistem çöken sunucuya rağmen veriyi getirdi.");
+            // 4. SONUÇ
+            System.out.println("\n**************************************************");
+            System.out.println("LİDERDEN GELEN CEVAP: " + getResponse);
+            System.out.println("**************************************************");
         } else {
-            System.out.println("\nBAŞARISIZ: Veri getirilemedi.");
-            System.out.println("Beklenen: " + targetValue);
-            System.out.println("Gelen: " + getResponse);
+            System.out.println("Giriş alınamadı!");
         }
     }
+
     private static String sendCommand(String command) {
         try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
              OutputStream out = socket.getOutputStream();
              PrintWriter writer = new PrintWriter(out, true);
              BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            String welcomeBanner = reader.readLine(); //sunucunun hoşgeldin mesajını çöpe attık ki gelen cevap bu sanılmasın.
+            // NOT: Eğer sunucun bağlanınca "Hoşgeldin" vb. bir şey göndermiyorsa
+            // aşağıdaki "welcomeBanner" satırını SİLMEN gerekir.
+            // Sunucunun protokolüne göre burası kodu kilitleyebilir.
+            String welcomeBanner = reader.readLine();
 
-            writer.println(command); //İsteğimizi söylüyoruz.
+            writer.println(command);
 
-            String response = reader.readLine(); //Asıl cevabı okuyoruz.
+            String response = reader.readLine();
             return response;
 
         } catch (Exception e) {
-            return "BAĞLANTI HATASI: " + e.getMessage();
+            return null;
         }
     }
 }
