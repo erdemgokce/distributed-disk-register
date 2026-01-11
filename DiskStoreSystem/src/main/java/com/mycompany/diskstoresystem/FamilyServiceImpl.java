@@ -193,7 +193,7 @@ public class FamilyServiceImpl extends DiskServiceGrpc.DiskServiceImplBase {
     // --- YARDIMCI METOTLAR ---
     // Diske Yazma Biçimleri
     // Yapılandırma: "BUFFERED", "UNBUFFERED_SYNC" , "NIO"
-    private static final String DISK_MODE = "NIO";
+    private static final String DISK_MODE = "UNBUFFERED_SYNC";
 
     private static void saveToDisk(String key, String data) {
         File folder = new File("messages");

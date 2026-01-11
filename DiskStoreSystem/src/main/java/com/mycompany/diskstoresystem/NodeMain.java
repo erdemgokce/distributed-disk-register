@@ -33,7 +33,7 @@ public class NodeMain {
     private static final Logger logger = Logger.getLogger(com.mycompany.diskstoresystem.NodeMain.class.getName());
 
     public static void main(String[] args) {
-        System.out.println("=== Distributed Disk Register System ===");
+        System.out.println("=== DAĞITIK KAYIT SİSTEME HOŞGELDİNİZ ===");
 
         // 1. ADIM: Portu bul ve gRPC Sunucuyu başlat
         startServerOnAvailablePort();
@@ -54,7 +54,7 @@ public class NodeMain {
         startHeartbeat();
         // Konsoldan (Klavyeden) komut girmeyi sağlayan döngü
         Scanner scanner = new Scanner(System.in);
-        System.out.println("\n>>> KONSOL MODU AKTİF! Komut girebilirsin (Örn: SET k1 v1 veya GET k1)");
+        System.out.println("\n>>> Komut girebilirsiniz: ");
 
         while (true) {
             try {
@@ -71,12 +71,12 @@ public class NodeMain {
                         String key = parts[1];
                         String value = line.substring(line.indexOf(parts[2]));
                         FamilyServiceImpl.sendStoreToAll(key, value);
-                        System.out.println("[KONSOL] Kayıt işlemi tetiklendi.");
+                        System.out.println("Kayıt işlemi tetiklendi.");
 
                     } else if (command.equals("GET") && parts.length == 2) {
                         // GET komutunu işle
                         String result = FamilyServiceImpl.sendRetrieveRequest(parts[1]);
-                        System.out.println("[KONSOL SONUÇ]: " + result);
+                        System.out.println("OK " + result);
 
                     } else if (command.equalsIgnoreCase("EXIT")) {
                         System.out.println("Çıkılıyor...");
@@ -147,12 +147,15 @@ public class NodeMain {
                                 if (command.equals("SET") && parts.length == 3) {
                                     FamilyServiceImpl.sendStoreToAll(parts[1], parts[2]);
                                     out.println("OK - Kayıt başlatıldı.");
-                                } else if (command.equals("GET") && parts.length == 2) {
-                                    String result = FamilyServiceImpl.sendRetrieveRequest(parts[1]);
-                                    out.println(result);
-                                } else {
-                                    out.println("HATA: Geçersiz komut.");
                                 }
+                                else if (command.equals("GET") && parts.length == 2) {
+                                    String result = FamilyServiceImpl.sendRetrieveRequest(parts[1]);
+                                    if (result != null && !result.startsWith("HATA")) {
+                                        out.println("OK " + result);
+                                    } else {
+                                        out.println("result");
+                                    }
+                            }
                             }
                         } catch (IOException e) {
                             System.err.println("TCP Bağlantısı koptu.");

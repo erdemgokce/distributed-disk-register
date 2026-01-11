@@ -30,7 +30,7 @@ public class HaToKuSeClient {
     private static final class Config {
         String host = "127.0.0.1";
         int port = 6666;
-        int durationMinutes = 10;
+        int durationMinutes = 2;
 
         // Workload
         double setRatio = 0.80;      // 0..1
